@@ -1,0 +1,17 @@
+START:
+    PUSH32I :MESSAGE
+    JMP32I :PRINT
+
+
+PRINT:
+    MOV32RI EAX x01
+    MOV32RI EBX x01
+    POP32R ECX
+    MOV32RI EDX xAC
+    SYSCALL
+
+END:
+    $ xFF xFF
+
+MESSAGE:
+    $ "Hello, World!"

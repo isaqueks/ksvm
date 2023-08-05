@@ -3,3 +3,4 @@ debug.txt
 main
 sample
 assembler/__pycache__
+*.bin

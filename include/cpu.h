@@ -97,6 +97,8 @@ void cpu_store_ir(Cpu* cpu, int size, uint8_t* imm_value, int reg2, uint8_t* mem
 
 void cpu_push_r(Cpu* cpu, int size, int reg, uint8_t* memory);
 
+void cpu_push_i(Cpu* cpu, int size, uint8_t* imm_value, uint8_t* memory);
+
 
 // POP
 

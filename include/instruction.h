@@ -13,121 +13,6 @@ typedef struct {
     
 } InstructionDef;
 
-// #define DECLARE_INSTRUCTION_0_0(name, code) \
-//     const InstructionOpcode OP_##name = code; \
-//     const InstructionDef name = { \
-//         code, \
-//         0, \
-//         0, \
-//         0 \
-//     }
-
-// #define DECLARE_INSTRUCTION_R(name, size, code) \
-//     const InstructionOpcode OP_##name##_##size##_##R = code; \
-//     const InstructionDef name##_##size##_##R = { \
-//         code, \
-//         size / 8, \
-//         2, \
-//         0 \
-//     }
-
-// #define DECLARE_INSTRUCTION_I(name, size, code) \
-//     const InstructionOpcode OP_##name##_##size##_##I = code; \
-//     const InstructionDef name##_##size##_##I = { \
-//         code, \
-//         size / 8, \
-//         size / 8, \
-//         0 \
-//     }
-
-// #define DECLARE_INSTRUCTION_R_I(name, size, code) \
-//     const InstructionOpcode OP_##name##_##size##_##R_I = code; \
-//     const InstructionDef name##_##size##_##R_I = { \
-//         code, \
-//         size / 8, \
-//         2, \
-//         size / 8 \
-//     }
-
-// #define DECLARE_INSTRUCTION_R_R(name, size, code) \
-//     const InstructionOpcode OP_##name##_##size##_##R_R = code; \
-//     const InstructionDef name##_##size##_##R_R = { \
-//         code, \
-//         size / 8, \
-//         2, \
-//         2 \
-//     }
-
-
-// #define DECLARE_INSTRUCTION_R_X(name, size, op) \
-//     DECLARE_INSTRUCTION_R_I(name, size, op); \
-//     DECLARE_INSTRUCTION_R_R(name, size, op + 1);
-
-// #define DECLARE_INSTRUCTION_X(name, size, op) \
-//     DECLARE_INSTRUCTION_R(name, size, op); \
-//     DECLARE_INSTRUCTION_I(name, size, op + 1);
-
-
-
-// #define INSTRUCTION_S_R_X(name, op) \
-//     DECLARE_INSTRUCTION_R_X(name, 32, op); \
-//     DECLARE_INSTRUCTION_R_X(name, 16, op + 2); \
-//     DECLARE_INSTRUCTION_R_X(name, 8, op + 4);
-//     // const InstructionOpcode name##_32_R_R = op, \
-//     // name##_32_R_I = op + 1, \
-//     // name##_32_I_I = op + 2, \
-//     // name##_16_R_R = op + 3, \
-//     // name##_16_R_I = op + 4, \
-//     // name##_16_I_I = op + 5, \
-//     // name##_8_R_R = op + 6, \
-//     // name##_8_R_I = op + 7, \
-//     // name##_8_I_I = op + 8;
-
-// // #define INSTRUCTION_S_R_X(name, op) \
-// //     DECLARE_INSTRUCTION_R_X(name, 32, op); \
-// //     DECLARE_INSTRUCTION_R_X(name, 16, op + 1); \
-// //     DECLARE_INSTRUCTION_R_X(name, 8, op + 2);
-//     // const InstructionOpcode name##_32_R_R = op, \
-//     // name##_32_R_I = op + 1, \
-//     // name##_16_R_R = op + 2, \
-//     // name##_16_R_I = op + 3, \
-//     // name##_8_R_R = op + 4, \
-//     // name##_8_R_I = op + 5;
-
-
-// #define INSTRUCTION_S_R(name, op) \
-//     DECLARE_INSTRUCTION_R(name, 32, op); \
-//     DECLARE_INSTRUCTION_R(name, 16, op + 1); \
-//     DECLARE_INSTRUCTION_R(name, 8, op + 2);
-//     // const InstructionOpcode name##_32_R = op, \
-//     // name##_16_R = op + 1, \
-//     // name##_8_R = op + 2;
-
-// #define INSTRUCTION_S_I(name, op) \
-//     DECLARE_INSTRUCTION_I(name, 32, op); \
-//     DECLARE_INSTRUCTION_I(name, 16, op + 1); \
-//     DECLARE_INSTRUCTION_I(name, 8, op + 2);
-//     // const InstructionOpcode name##_32_I = op, \
-//     // name##_16_I = op + 1, \
-//     // name##_8_I = op + 2;
-
-// #define INSTRUCTION_S_X(name, op) \
-//     DECLARE_INSTRUCTION_R(name, 32, op); \
-//     DECLARE_INSTRUCTION_R(name, 16, op + 1); \
-//     DECLARE_INSTRUCTION_R(name, 8, op + 2); \
-//     DECLARE_INSTRUCTION_I(name, 32, op + 3); \
-//     DECLARE_INSTRUCTION_I(name, 16, op + 4); \
-//     DECLARE_INSTRUCTION_I(name, 8, op + 5);
-    
-
-
-// #define INSTRUCTION_32_R(name, op) \
-//     DECLARE_INSTRUCTION_R(name, 32, op);
-//     // const InstructionOpcode name##_32_R = op;
-
-// #define INSTRUCTION_32_I(name, op) \
-//     DECLARE_INSTRUCTION_I(name, 32, op);
-//     // const InstructionOpcode name##_32_I = op;
 
 #define MOV_BASE 10
 #define ADD_BASE 20
@@ -143,46 +28,6 @@ typedef struct {
 #define PUSH_BASE 120
 #define POP_BASE 130
 #define SYSCALL_BASE 140
-
-// typedef enum {
-
-    // INSTRUCTION_S_R_X(MOV, MOV_BASE);
-    // INSTRUCTION_S_R_X(ADD, ADD_BASE);
-    // INSTRUCTION_S_R_X(SUB, SUB_BASE);
-    // INSTRUCTION_S_R_X(MUL, MUL_BASE);
-    // INSTRUCTION_S_R_X(DIV, DIV_BASE);
-    // INSTRUCTION_S_R_X(CMP, CMP_BASE);
-
-    // INSTRUCTION_32_R(JMP, JMP_BASE);
-    // INSTRUCTION_32_I(JMP, JMP_BASE + 1);
-
-    // // JMP_32_R = JMP_BASE,
-    // // JMP_32_I = JMP_BASE + 1,
-
-    // INSTRUCTION_32_R(JZ, JZ_BASE);
-    // INSTRUCTION_32_I(JZ, JZ_BASE + 1);
-
-    // // JZ_32_R = JZ_BASE,
-    // // JZ_32_I = JZ_BASE + 1,
-
-    // INSTRUCTION_32_R(JNZ, JNZ_BASE);
-    // INSTRUCTION_32_I(JNZ, JNZ_BASE + 1);
-
-    // // JNZ_32_R = JNZ_BASE,
-    // // JNZ_32_I = JNZ_BASE + 1,
-
-    // INSTRUCTION_S_R_X(LOAD, LOAD_BASE);
-    // INSTRUCTION_S_R_X(STORE, STORE_BASE);
-
-    // INSTRUCTION_S_X(PUSH, PUSH_BASE);
-    // INSTRUCTION_S_R(POP, POP_BASE);
-
-
-    // DECLARE_INSTRUCTION_0_0(SYSCALL, SYSCALL_BASE);
-    // // SYSCALL = SYSCALL_BASE,
-
-
-// } Opcodes;
 
 typedef enum { 
 
@@ -269,7 +114,5 @@ typedef enum {
 int instruction_get_size(InstructionDef* instr);
 
 InstructionDef* instruction_get_def(InstructionOpcode opcode);
-
-#define INST_LIT(I) I, 0x00
 
 #endif

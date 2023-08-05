@@ -318,7 +318,7 @@ void vm_compute_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands)
 
     InstructionDef* def = instruction_get_def(opcode);
     if (def == NULL) {
-        fprintf(stderr, "Unknown opcode: %04X (INDEX: %d)\n", opcode, regGet32(&vm->cpu.registers[R_PROGRAM_COUNTER]));
+        fprintf(stderr, "Unknown opcode: %04X (INDEX: %X04X)\n", opcode, regGet32(&vm->cpu.registers[R_PROGRAM_COUNTER]));
         ENABLE_FLAG(FLAG_ERROR);
         return;
     }
@@ -442,6 +442,55 @@ void vm_compute_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands)
             cpu_load_ri(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]), &operands[2], vm->memory);
             break;
 
+        // case OP_STORE8RR:
+        //     cpu_store_rr(&vm->cpu, 8, *CAST(uint16_t*, &operands[0]), *CAST(uint16_t*, &operands[2]), vm->memory);
+        //     break;
+        // case OP_STORE16RR:
+        //     cpu_store_rr(&vm->cpu, 16, *CAST(uint16_t*, &operands[0]), *CAST(uint16_t*, &operands[2]), vm->memory);
+        //     break;
+        // case OP_STORE32RR:
+        //     cpu_store_rr(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]), *CAST(uint16_t*, &operands[2]), vm->memory);
+        //     break;
+        
+        // case OP_STORE8RI:
+        //     cpu_store_ri(&vm->cpu, 8, *CAST(uint16_t*, &operands[0]), &operands[2], vm->memory);
+        //     break;
+        // case OP_STORE16RI:
+        //     cpu_store_ri(&vm->cpu, 16, *CAST(uint16_t*, &operands[0]), &operands[2], vm->memory);
+        //     break;
+        // case OP_STORE32RI:
+        //     cpu_store_ri(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]), &operands[2], vm->memory);
+        //     break;
+
+        case OP_PUSH8R:
+            cpu_push_r(&vm->cpu, 8, *CAST(uint16_t*, &operands[0]), vm->memory);
+            break;
+        case OP_PUSH16R:
+            cpu_push_r(&vm->cpu, 16, *CAST(uint16_t*, &operands[0]), vm->memory);
+            break;
+        case OP_PUSH32R:
+            cpu_push_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]), vm->memory);
+            break;
+        
+        case OP_PUSH8I:
+            cpu_push_i(&vm->cpu, 8, &operands[0], vm->memory);
+            break;
+        case OP_PUSH16I:
+            cpu_push_i(&vm->cpu, 16, &operands[0], vm->memory);
+            break;
+        case OP_PUSH32I:
+            cpu_push_i(&vm->cpu, 32, &operands[0], vm->memory);
+            break;
+        
+        case OP_POP8R:
+            cpu_pop_r(&vm->cpu, 8, *CAST(uint16_t*, &operands[0]), vm->memory);
+            break;
+        case OP_POP16R:
+            cpu_pop_r(&vm->cpu, 16, *CAST(uint16_t*, &operands[0]), vm->memory);
+            break;
+        case OP_POP32R:
+            cpu_pop_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]), vm->memory);
+            break;
 
         case OP_SYSCALL:
             cpu_syscall(&vm->cpu, vm->memory);
@@ -455,7 +504,7 @@ void vm_dump_program(VM* vm, char* program, int size, FILE* out) {
 
     int pc = 0;
 
-    fprintf(out, "PC     00 01 02 03 04 05 06 07 \t\tINST\t\tOP1\t\tOP2\t\t\tASCII\n\n");
+    fprintf(out, "##     00 01 02 03 04 05 06 07 \t\tINST\t\tOP1\t\tOP2\t\t\tASCII\n\n");
 
     while (pc < size) {
         uint8_t opcode[2] = {0, 0};
@@ -482,7 +531,7 @@ void vm_dump_program(VM* vm, char* program, int size, FILE* out) {
         fprintf(out, "%04X   ", pc);
 
         for (int i = 0; i < size; i++) {
-            fprintf(out, "%02X ", bytes[i]);
+            fprintf(out, "%02X ", (uint8_t)bytes[i]);
         }
 
         for (int i = size; i < 7; i++) {
@@ -493,7 +542,6 @@ void vm_dump_program(VM* vm, char* program, int size, FILE* out) {
 
         if (def == NULL) {
             fprintf(out, "????\t\t\t\t\t\t\t");
-            // fprintf(out, "[DEBUG] Unknown opcode: %04X (INDEX: %08X)\n", opcode, pc);
             for (int i = 0; i < size; i++) {
                 char ch = bytes[i];
                 if (isprint(ch)) {

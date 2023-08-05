@@ -384,11 +384,69 @@ void cpu_store_ir(Cpu* cpu, int size, uint8_t* imm_value, int reg2,
 
 // PUSH
 
-void cpu_push_r(Cpu* cpu, int size, int reg, uint8_t* memory);
+void cpu_push_r(Cpu* cpu, int size, int reg, uint8_t* memory) {
+    switch (size) {
+        case 32:
+            cpu->registers[R_STACK_POINTER] -= 4;
+            *(uint32_t*)(&memory[cpu->registers[R_STACK_POINTER]]) =
+                regGet32(&cpu->registers[reg]);
+            break;
+        case 16:
+            cpu->registers[R_STACK_POINTER] -= 2;
+            *(uint16_t*)(&memory[cpu->registers[R_STACK_POINTER]]) =
+                regGet16(&cpu->registers[reg]);
+            break;
+        case 8:
+            cpu->registers[R_STACK_POINTER] -= 1;
+            *(uint8_t*)(&memory[cpu->registers[R_STACK_POINTER]]) =
+                regGet8(&cpu->registers[reg]);
+            break;
+    }
+}
+
+void cpu_push_i(Cpu* cpu, int size, uint8_t* imm_value, uint8_t* memory) {
+
+    switch (size) {
+        case 32:
+            cpu->registers[R_STACK_POINTER] -= 4;
+            *(uint32_t*)(&memory[cpu->registers[R_STACK_POINTER]]) =
+                *(uint32_t*)(imm_value);
+            break;
+        case 16:
+            cpu->registers[R_STACK_POINTER] -= 2;
+            *(uint16_t*)(&memory[cpu->registers[R_STACK_POINTER]]) =
+                *(uint16_t*)(imm_value);
+            break;
+        case 8:
+            cpu->registers[R_STACK_POINTER] -= 1;
+            *(uint8_t*)(&memory[cpu->registers[R_STACK_POINTER]]) =
+                *(uint8_t*)(imm_value);
+            break;
+    }
+
+}
 
 // POP
 
-void cpu_pop_r(Cpu* cpu, int size, int reg, uint8_t* memory);
+void cpu_pop_r(Cpu* cpu, int size, int reg, uint8_t* memory) {
+    switch (size) {
+        case 32:
+            regSet32(&cpu->registers[reg],
+                     *(uint32_t*)(&memory[cpu->registers[R_STACK_POINTER]]));
+            cpu->registers[R_STACK_POINTER] += 4;
+            break;
+        case 16:
+            regSet16(&cpu->registers[reg],
+                     *(uint16_t*)(&memory[cpu->registers[R_STACK_POINTER]]));
+            cpu->registers[R_STACK_POINTER] += 2;
+            break;
+        case 8:
+            regSet8(&cpu->registers[reg],
+                    *(uint8_t*)(&memory[cpu->registers[R_STACK_POINTER]]));
+            cpu->registers[R_STACK_POINTER] += 1;
+            break;
+    }
+}
 
 // SYSCALL
 

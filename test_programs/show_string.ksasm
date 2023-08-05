@@ -1,23 +1,15 @@
 START:
     MOV32RI EAX :LOGIN_MESSAGE
-    MOV32RI ECX :CONTINUE
-    JMP32I :STRLEN
+    PUSH32R EAX
+    PUSH32R EIP
+    JMP32I :PRINT
 
-CONTINUE:
-    MOV32RR EDX EAX
-    MOV32RI EAX 1
-    MOV32RI EBX 1
-    MOV32RI ECX :LOGIN_MESSAGE
-
-SYSCALL
-$ xFFFF ; Crash the program
-; 
-; MOV32RI EAX x00
-; MOV32RI EBX x00
-; MOV32RI ECX :BUFFER
-; MOV32RI EDX 2
+    $ xFF xFF
 
 STRLEN:                 ; strlen(eax) -> eax
+    POP32R ECX
+    ADD32RI ECX x06
+
     MOV32RR EDX EAX
     STRLEN_LOOP:
         LOAD8RR EBX EAX
@@ -25,9 +17,28 @@ STRLEN:                 ; strlen(eax) -> eax
         ADD32RI EAX 1
         JNZ32I :STRLEN_LOOP
         SUB32RR EAX EDX
+        ADD32RI EAX x01
+        PUSH32R EAX
         JMP32R ECX
 
+PRINT:                  ; (char* buffer)
+    POP32R R11          ; Old EIP   
+    POP32R R10          ; Load buffer param to R10
+    MOV32RR EAX R10     ; Set EAX to buffer
+    PUSH32R EIP         ; Save EIP
+    JMP32I :STRLEN
+    POP32R EDX          ; Load strlen result to EDX
+    MOV32RI EAX x01     ; Set EAX to 1 (write syscall)
+    MOV32RI EBX x01     ; Set EBX to 1 (stdout)
+    MOV32RR ECX R10     ; Set ECX to buffer
+    SYSCALL             ; Call write syscall
+
+    ; "Return"
+    ADD32RI R11 x06     ; Add 6 to ECX 
+    JMP32R R11          ; Jump to old EIP
+
+
 LOGIN_MESSAGE:
-$ "Type your password: " x0A x00
+$ "This is a string message! " x0A x00
 BUFFER:
 $ x0000
