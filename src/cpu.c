@@ -450,14 +450,35 @@ void cpu_pop_r(Cpu* cpu, int size, int reg, uint8_t* memory) {
 
 // SYSCALL
 
+uint8_t syscall_mem_ptrs[] = {
+    0b010, /* Read - RDI, RSI (ptr), RDX */
+    0b010, /* Write - RDI, RSI (ptr), RDX */
+    0b100, /* Open - RDI (ptr), RSI, RDX */
+    0b000, /* Close - RDI */
+};
+
 void cpu_syscall(Cpu* cpu, uint8_t* memory) {
-    uint32_t r0 = regGet32(&cpu->registers[0]);
-    uint32_t r1 = regGet32(&cpu->registers[1]);
-    uint32_t r2 = regGet32(&cpu->registers[2]);
-    uint32_t r3 = regGet32(&cpu->registers[3]);
+    
+    uint64_t r0 = (uint64_t)regGet32(&cpu->registers[0]);
+    uint64_t r1 = (uint64_t)regGet32(&cpu->registers[1]);
+    uint64_t r2 = (uint64_t)regGet32(&cpu->registers[2]);
+    uint64_t r3 = (uint64_t)regGet32(&cpu->registers[3]);
+
+    if (r0 < sizeof(syscall_mem_ptrs)) {
+        uint8_t opts = syscall_mem_ptrs[r0];
+        if (opts & 0b100) {
+            r1 += (uint64_t)memory;
+        }
+        if (opts & 0b010) {
+            r2 += (uint64_t)memory;
+        }
+        if (opts & 0b001) {
+            r3 += (uint64_t)memory;
+        }
+    }
 
     register uint64_t rdi asm("rdi") = r1;
-    register char* rsi asm("rsi") = (char*)&memory[r2];
+    register uint64_t rsi asm("rsi") = r2;
     register uint64_t rdx asm("rdx") = r3;
     register uint64_t rax asm("rax") = r0;
 
