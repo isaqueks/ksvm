@@ -26,27 +26,11 @@ bool cpu_get_zero_flag(Cpu* cpu) {
 }
 
 void cpu_print_registers(Cpu* cpu, FILE* out) {
-    fprintf(out, "Register\tHex\t\tASCII\t\tDEC\t\t\tBin\n");
+    fprintf(out, "Register\tHEX\t\t\tASCII\t\tDEC\t\t\t\tBIN\n");
 
     for (int j = 0; j < CPU_REGISTERS; j++) {
         uint32_t value = regGet32(&cpu->registers[j]);
-        switch (j) {
-            case R_STACK_POINTER:
-                fprintf(out, "SP\t\t");
-                break;
-            case R_BASE_POINTER:
-                fprintf(out, "BP\t\t");
-                break;
-            case R_PROGRAM_COUNTER:
-                fprintf(out, "PC\t\t");
-                break;
-            case R_FLAGS:
-                fprintf(out, "FLAGS\t\t");
-                break;
-            default:
-                fprintf(out, "R%d\t\t", j);
-                break;
-        }
+        fprintf(out, "%s\t\t\t", register_names[j]);
 
         fprintf(out, "%08X\t", value);
 
@@ -66,6 +50,9 @@ void cpu_print_registers(Cpu* cpu, FILE* out) {
         fprintf(out, "%010u\t\t", value);
 
         for (int i = 0; i < 32; i++) {
+            if (i % 8 == 0 && i != 0) {
+                fprintf(out, " ");
+            }
             fprintf(out, "%d", (value >> (31 - i)) & 1);
         }
 

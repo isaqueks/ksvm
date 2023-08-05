@@ -13,6 +13,8 @@ uint32_t regGet32(Register_t *reg);
 uint16_t regGet16(Register_t *reg);
 uint8_t regGet8(Register_t *reg);
 
+char* register_names[];
+
 #define REG_LIT(REG) REG, 0x00
 
 #define FLAG_ZERO       0b00000000000000000000000000000001
