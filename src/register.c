@@ -60,9 +60,9 @@ char* register_names[] = {
     "R24",
     "R25",
 
-    "RSP",
-    "RBP",
-    "RIP",
+    "ESP",
+    "EBP",
+    "EIP",
     "FLAGS",
     "R30",
     "R31"

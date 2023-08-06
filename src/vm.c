@@ -4,6 +4,20 @@
 #include <ctype.h>
 #include "../include/vm.h"
 
+#ifdef DEBUG_COLORS
+
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+#define BCKGRD_COL_CUSTOM_RED   "\e[48;2;200;0;0m"
+
+#endif
+
 uint8_t vm_read_memory(VM* vm, uint32_t address) {
     return vm->memory[address];
 }
@@ -40,11 +54,11 @@ void vm_load_program(VM* vm, uint8_t* program, uint32_t program_size) {
 
 void vm_print_instruction_table(FILE* out, char* instr, char* op1, char* op2) {
     if (op1 == NULL) {
-        fprintf(out, "%s\n", instr);
+        fprintf(out, "%s", instr);
     } else if (op2 == NULL) {
-        fprintf(out, "%s\t\t%s\n", instr, op1);
+        fprintf(out, "%s\t\t%s", instr, op1);
     } else {
-        fprintf(out, "%s\t\t%s\t\t%s\n", instr, op1, op2);
+        fprintf(out, "%s\t\t%s\t\t%s", instr, op1, op2);
     }
 }
 
@@ -305,7 +319,7 @@ void vm_print_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands, F
             break;
 
         case OP_SYSCALL:
-            fprintf(out, "SYSCALL\n");
+            fprintf(out, "SYSCALL");
             break;
 
         default:
@@ -500,13 +514,13 @@ void vm_compute_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands)
 
 }
 
-void vm_dump_program(VM* vm, char* program, int size, FILE* out) {
+void vm_dump_program(VM* vm, char* program, int start, int size, int highlight_pc, FILE* out) {
 
-    int pc = 0;
+    int pc = start;
 
-    fprintf(out, "##     00 01 02 03 04 05 06 07 \t\tINST\t\tOP1\t\tOP2\t\t\tASCII\n\n");
+    fprintf(out, " ##     00 01 02 03 04 05 06 07 \t\tINST\t\tOP1\t\tOP2\t\t\tASCII\n\n");
 
-    while (pc < size) {
+    while (pc < (start+size)) {
         uint8_t opcode[2] = {0, 0};
         memcpy((void*)opcode, &program[pc], 2);
 
@@ -528,17 +542,31 @@ void vm_dump_program(VM* vm, char* program, int size, FILE* out) {
         char bytes[8] = { 0x00 };
         memcpy(bytes, &program[pc], size);
 
-        fprintf(out, "%04X   ", pc);
+        if (highlight_pc == pc) {
+            #ifdef DEBUG_COLORS
+            fprintf(out, BCKGRD_COL_CUSTOM_RED "[%04X]  ", pc);
+            #endif
+            #ifndef DEBUG_COLORS
+            fprintf(out, "[%04X]  ", pc);
+            #endif
+        }
+        else {
+            fprintf(out, " %04X   ", pc);
+        }
 
         for (int i = 0; i < size; i++) {
             fprintf(out, "%02X ", (uint8_t)bytes[i]);
         }
 
-        for (int i = size; i < 7; i++) {
-            fprintf(out, "   ");
+        for (int i = size; i < 8; i++) {
+            fprintf(out, ".. ");
         }
 
         fprintf(out, "\t\t");
+
+        if (pc == highlight_pc) {
+            fprintf(out, "[");
+        }
 
         if (def == NULL) {
             fprintf(out, "????\t\t\t\t\t\t\t");
@@ -551,27 +579,42 @@ void vm_dump_program(VM* vm, char* program, int size, FILE* out) {
                     fprintf(out, ".");
                 }
             }
-            fprintf(out, "\n");
         }
         else {
             vm_print_instruction(vm, *CAST(uint16_t*, opcode), &program[pc + 2], out);
         }
 
+        if (pc == highlight_pc) {
+            fprintf(out, "]");
+        }
+
+        fprintf(out, "\n");
+
+        #ifdef DEBUG_COLORS
+        if (pc == highlight_pc) {
+            fprintf(out, KNRM);
+        }
+        #endif
 
         pc += size;
     }
 }
 
-void vm_run(VM* vm, FILE* debugger_out) {
+void vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step) {
     while (!FLAG(FLAG_ERROR) && regGet32(&vm->cpu.registers[R_PROGRAM_COUNTER]) < vm->memory_size) {
 
         uint32_t pc = regGet32(&vm->cpu.registers[R_PROGRAM_COUNTER]);
         uint8_t opcode[] = {vm->memory[pc], vm->memory[pc+1]};
 
-        if (debugger_out != NULL) {
-            vm_print_instruction(vm, *CAST(uint16_t*, opcode), &vm->memory[pc + 2], debugger_out);
-            fflush(debugger_out);
+        if (backlog != NULL) {
+            vm_print_instruction(vm, *CAST(uint16_t*, opcode), &vm->memory[pc + 2], backlog);
+            fprintf(backlog, "\n");
+            fflush(backlog);
         }
         vm_compute_instruction(vm, *CAST(uint16_t*, opcode), &vm->memory[pc + 2]);
+
+        if (on_step != NULL) {
+            on_step(vm, pc);
+        }
     }
 }

@@ -26,11 +26,11 @@ bool cpu_get_zero_flag(Cpu* cpu) {
 }
 
 void cpu_print_registers(Cpu* cpu, FILE* out) {
-    fprintf(out, "Register\tHEX\t\t\tASCII\t\tDEC\t\t\t\tBIN\n");
+    fprintf(out, "Register\tHEX\t\tASCII\t\tDEC\t\t\tBIN\n");
 
     for (int j = 0; j < CPU_REGISTERS; j++) {
         uint32_t value = regGet32(&cpu->registers[j]);
-        fprintf(out, "%s\t\t\t", register_names[j]);
+        fprintf(out, "%s\t\t", register_names[j]);
 
         fprintf(out, "%08X\t", value);
 
