@@ -1,0 +1,54 @@
+; Simple application to ask the user's name and print it back
+
+; _START isn't really the application entry point is the first byte. 
+; Just for tradition:
+_START:
+    MOV32RI EAX :MESSAGE
+    MOV32RI EBX 16
+
+    CALL32I :PRINT
+
+    MOV32RI EAX :BUFFER
+    MOV32RI EBX 16
+
+    CALL32I :READLINE
+
+    MOV32RI EAX :MESSAGE_2
+    MOV32RI EBX 13
+
+    CALL32I :PRINT
+
+    MOV32RI EAX :BUFFER
+    MOV32RI EBX 16
+
+    CALL32I :PRINT
+
+    $ xFF xFF
+
+
+PRINT: ; (EAX = MESSAGE, EBX = LEN)
+    MOV32RR ECX EAX
+    MOV32RR EDX EBX
+    MOV32RI EAX x01
+    MOV32RI EBX x01
+
+    SYSCALL
+
+    RET
+
+READLINE: ; (EAX = BUFFER, EBX = LEN)
+    MOV32RR ECX EAX
+    MOV32RR EDX EBX
+    MOV32RI EAX x00
+    MOV32RI EBX x00
+
+    SYSCALL
+
+    RET
+
+MESSAGE:
+$ "Type your name: " x00
+MESSAGE_2:
+$ "Your name is " x00
+BUFFER:
+$ "               " x00
