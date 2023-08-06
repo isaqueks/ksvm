@@ -81,6 +81,11 @@ const InstructionDef POP32R = { OP_POP32R, 32, 2, 0 };
 const InstructionDef POP16R = { OP_POP16R, 16, 2, 0 };
 const InstructionDef POP8R = { OP_POP8R, 8, 2, 0 };
 
+const InstructionDef CALL32R = { OP_CALL32R, 32, 2, 0 };
+const InstructionDef CALL32I = { OP_CALL32I, 32, 4, 0 };
+
+const InstructionDef RET = { OP_RET, 32, 0, 0 };
+
 const InstructionDef SYSCALL = { OP_SYSCALL, 32, 0, 0 };
 
 InstructionDef* instruction_get_def(InstructionOpcode opcode) {
@@ -223,6 +228,15 @@ InstructionDef* instruction_get_def(InstructionOpcode opcode) {
             return &POP16R;
         case OP_POP8R:
             return &POP8R;
+
+        case OP_CALL32R:
+            return &CALL32R;
+
+        case OP_CALL32I:
+            return &CALL32I;
+
+        case OP_RET:
+            return &RET;
 
         case OP_SYSCALL:
             return &SYSCALL;

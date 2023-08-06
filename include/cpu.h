@@ -104,6 +104,16 @@ void cpu_push_i(Cpu* cpu, int size, uint8_t* imm_value, uint8_t* memory);
 
 void cpu_pop_r(Cpu* cpu, int size, int reg, uint8_t* memory);
 
+// CALL
+
+void cpu_call_r(Cpu* cpu, int size, int reg, uint8_t* memory);
+
+void cpu_call_i(Cpu* cpu, int size, uint8_t* imm_value, uint8_t* memory);
+
+// RET
+
+void cpu_ret(Cpu* cpu, uint8_t* memory);
+
 // SYSCALL
 
 void cpu_syscall(Cpu* cpu, uint8_t* memory);

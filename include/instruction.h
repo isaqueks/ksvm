@@ -28,6 +28,8 @@ typedef struct {
 #define PUSH_BASE 120
 #define POP_BASE 130
 #define SYSCALL_BASE 140
+#define CALL_BASE 150
+#define RET_BASE 160
 
 typedef enum { 
 
@@ -106,6 +108,11 @@ typedef enum {
     OP_POP32R = POP_BASE,
     OP_POP16R = POP_BASE + 1,
     OP_POP8R = POP_BASE + 2,
+
+    OP_CALL32R = CALL_BASE,
+    OP_CALL32I = CALL_BASE + 1,
+
+    OP_RET = RET_BASE,
 
     OP_SYSCALL = SYSCALL_BASE,
 

@@ -1,32 +1,32 @@
 START:
     MOV32RI EAX :LOGIN_MESSAGE
     PUSH32R EAX
-    PUSH32R EIP
-    JMP32I :PRINT
+    CALL32I :PRINT
 
     $ xFF xFF
 
-STRLEN:                 ; strlen(eax) -> eax
+STRLEN:                 ; strlen(eax) -> stack
     POP32R ECX
-    ADD32RI ECX x06
-
     MOV32RR EDX EAX
+
     STRLEN_LOOP:
         LOAD8RR EBX EAX
         CMP8RI EBX 0
         ADD32RI EAX 1
         JNZ32I :STRLEN_LOOP
+
+    STRLEN_DONE:
         SUB32RR EAX EDX
         ADD32RI EAX x01
         PUSH32R EAX
-        JMP32R ECX
+        PUSH32R ECX
+        RET
 
 PRINT:                  ; (char* buffer)
     POP32R R11          ; Old EIP   
     POP32R R10          ; Load buffer param to R10
-    MOV32RR EAX R10     ; Set EAX to buffer
-    PUSH32R EIP         ; Save EIP
-    JMP32I :STRLEN
+    PUSH32R R10     ; Set EAX to buffer
+    CALL32I :STRLEN
     POP32R EDX          ; Load strlen result to EDX
     MOV32RI EAX x01     ; Set EAX to 1 (write syscall)
     MOV32RI EBX x01     ; Set EBX to 1 (stdout)
@@ -34,8 +34,8 @@ PRINT:                  ; (char* buffer)
     SYSCALL             ; Call write syscall
 
     ; "Return"
-    ADD32RI R11 x06     ; Add 6 to ECX 
-    JMP32R R11          ; Jump to old EIP
+    PUSH32R R11         ; Save EIP
+    RET
 
 
 LOGIN_MESSAGE:

@@ -448,6 +448,33 @@ void cpu_pop_r(Cpu* cpu, int size, int reg, uint8_t* memory) {
     }
 }
 
+// CALL
+
+void cpu_call_r(Cpu* cpu, int size, int reg, uint8_t* memory) {
+    assert(size == 32);
+
+    cpu->registers[R_STACK_POINTER] -= 4;
+    *(uint32_t*)(&memory[cpu->registers[R_STACK_POINTER]]) = cpu->registers[R_PROGRAM_COUNTER]/* + 4*/;
+
+    cpu->registers[R_PROGRAM_COUNTER] = regGet32(&cpu->registers[reg]);
+}
+
+void cpu_call_i(Cpu* cpu, int size, uint8_t* imm_value, uint8_t* memory) {
+    assert(size == 32);
+
+    cpu->registers[R_STACK_POINTER] -= 4;
+    *(uint32_t*)(&memory[cpu->registers[R_STACK_POINTER]]) = cpu->registers[R_PROGRAM_COUNTER]/* + 6*/;
+
+    cpu->registers[R_PROGRAM_COUNTER] = *(uint32_t*)imm_value;
+}
+
+// RET
+
+void cpu_ret(Cpu* cpu, uint8_t* memory) {
+    cpu->registers[R_PROGRAM_COUNTER] = *(uint32_t*)(&memory[cpu->registers[R_STACK_POINTER]]);
+    cpu->registers[R_STACK_POINTER] += 4;
+}
+
 // SYSCALL
 
 uint8_t syscall_mem_ptrs[] = {

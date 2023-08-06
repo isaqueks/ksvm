@@ -318,8 +318,20 @@ void vm_print_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands, F
             vm_print_instruction_r(out, "POP32", *CAST(uint16_t*, &operands[0]));
             break;
 
+        case OP_CALL32R:
+            vm_print_instruction_r(out, "CALL", *CAST(uint16_t*, &operands[0]));
+            break;
+
+        case OP_CALL32I:
+            vm_print_instruction_i(out, "CALL", &operands[0], 32);
+            break;
+
+        case OP_RET:
+            vm_print_instruction_table(out, "RET", NULL, NULL);
+            break;
+
         case OP_SYSCALL:
-            fprintf(out, "SYSCALL");
+            vm_print_instruction_table(out, "SYSCALL", NULL, NULL);
             break;
 
         default:
@@ -506,6 +518,19 @@ void vm_compute_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands)
             cpu_pop_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]), vm->memory);
             break;
 
+        case OP_CALL32R:
+            cpu_call_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]), vm->memory);
+            break;
+
+        case OP_CALL32I:
+            cpu_call_i(&vm->cpu, 32, &operands[0], vm->memory);
+            break;
+
+        case OP_RET:
+            cpu_ret(&vm->cpu, vm->memory);
+            break;
+
+
         case OP_SYSCALL:
             cpu_syscall(&vm->cpu, vm->memory);
             break;
@@ -520,7 +545,7 @@ void vm_dump_program(VM* vm, char* program, int start, int size, int highlight_p
 
     fprintf(out, " ##     00 01 02 03 04 05 06 07 \t\tINST\t\tOP1\t\tOP2\t\t\tASCII\n\n");
 
-    while (pc < (start+size)) {
+    while (pc < (size)) {
         uint8_t opcode[2] = {0, 0};
         memcpy((void*)opcode, &program[pc], 2);
 
@@ -611,10 +636,10 @@ void vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step) {
             fprintf(backlog, "\n");
             fflush(backlog);
         }
-        vm_compute_instruction(vm, *CAST(uint16_t*, opcode), &vm->memory[pc + 2]);
-
         if (on_step != NULL) {
             on_step(vm, pc);
         }
+        vm_compute_instruction(vm, *CAST(uint16_t*, opcode), &vm->memory[pc + 2]);
+
     }
 }

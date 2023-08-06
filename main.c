@@ -7,12 +7,27 @@
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
+#define ABS(x) ((x) > 0 ? (x) : -(x))
+#define DEBUG_PAGE_SIZE 92
 
 bool print_reg = false;
 
 void debug_step(VM* vm, int pc) {
     system("clear");
-    vm_dump_program(vm, vm->memory, MAX(pc - 128, 0), MIN(vm->memory_size, 128), pc, stdout);
+
+    int start = pc - (DEBUG_PAGE_SIZE / 2);
+    int end = pc + (DEBUG_PAGE_SIZE / 2);
+
+    if (end > vm->memory_size) {
+        start = vm->memory_size - DEBUG_PAGE_SIZE;
+        end = vm->memory_size;
+    }
+    else if (start < 0) {
+        start = 0;
+        end = DEBUG_PAGE_SIZE;
+    }
+
+    vm_dump_program(vm, vm->memory, start, end, pc, stdout);
     if (print_reg) {
         printf("\n");
         cpu_print_registers(&vm->cpu, stdout);

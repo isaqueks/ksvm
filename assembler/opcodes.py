@@ -12,6 +12,8 @@ LOAD_BASE = 100
 STORE_BASE = 110
 PUSH_BASE = 120
 POP_BASE = 130
+CALL_BASE = 150
+RET_BASE = 160
 SYSCALL_BASE = 140
 
 
@@ -90,6 +92,11 @@ OP_PUSH8I = PUSH_BASE + 5
 OP_POP32R = POP_BASE
 OP_POP16R = POP_BASE + 1
 OP_POP8R = POP_BASE + 2
+
+OP_CALL32R = CALL_BASE
+OP_CALL32I = CALL_BASE + 1
+
+OP_RET = RET_BASE
 
 OP_SYSCALL = SYSCALL_BASE
 
@@ -171,6 +178,11 @@ instructions = [
     OP_POP16R,
     OP_POP8R,
 
+    OP_CALL32R,
+    OP_CALL32I,
+
+    OP_RET,
+
     OP_SYSCALL,
 ]
 
@@ -251,6 +263,11 @@ instruction_names = [
     "POP32R",
     "POP16R",
     "POP8R",
+
+    "CALL32R",
+    "CALL32I",
+
+    "RET",
 
     "SYSCALL",
 ]
