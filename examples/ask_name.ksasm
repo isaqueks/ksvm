@@ -1,6 +1,6 @@
 ; Simple application to ask the user's name and print it back
 
-; _START isn't really the application entry point is the first byte. 
+; _START isn't really the needed as the application entry point is always the first byte. 
 ; Just for tradition:
 _START:
     MOV32RI EAX :MESSAGE

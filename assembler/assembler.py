@@ -1,191 +1,98 @@
 import opcodes
 import registers
-
-def le(bytes):
-    bytes.reverse()
-    return bytes
-
-def append_le(list, bytes):
-    bytes.reverse()
-    for b in bytes:
-        list.append(b)
-
-def get_bytes(number, size = 0):
-    size = int(size)
-    bytes = []
-    while number > 0:
-        bytes.append(number & 0xFF)
-        number = number >> 8
-
-    while size > 0 and len(bytes) < size:
-        bytes.insert(0, 0)
-    if size > 0 and len(bytes) > size:
-        raise Exception("Number too large for size: " + str(number) + " " + str(size))
-
-    return bytes
+import binary as bin
+import io
+import typing
+import asm_lexer
+import lex_token
+import instruction_meta as imeta
 
 class Assembler:
 
-    def __init__(self, out_file, input_file):
+    out_bytes: typing.List[int] = []
+    labels: typing.Dict[str, int] = {}
+    indices_to_apply_labels: typing.Dict[int, str] = {}
+    lexer: asm_lexer.Lexer = asm_lexer.Lexer()
+
+    def __init__(self, out_file: io.BufferedIOBase, input_file: io.TextIOWrapper):
         self.out_file = out_file
         self.input_file = input_file
-        self.out_bytes = []
-        self.labels = {}
-        self.indices_to_apply_labels = {}
 
-    def assemble_instruction(self, tokens):
-        if len(tokens) == 0:
-            return
+    def assemble_instruction(self, tokens: typing.List[lex_token.Token]) -> typing.List[int]:
+        instruction_token = tokens.pop(0)
 
-        byte_arr = []
+        if instruction_token.type != "instruction":
+            raise Exception("Expected instruction, got " + str(tokens[0]))
 
-        tokens.reverse()
-        tokens = list(map(lambda x: x.upper(), tokens))
-        
-        opcode = tokens.pop()
 
-        if opcode not in opcodes.instruction_names:
-            raise Exception("Unknown opcode: " + opcode)
+        bytes: typing.List[int] = []
 
-        opcode_bin = opcodes.instructions[opcodes.instruction_names.index(opcode)]
+        meta = imeta.InstructionMeta(instruction_token.value)
 
-        append_le(byte_arr, [0, opcode_bin])
+        opcode = opcodes.instructions[opcodes.instruction_names.index(instruction_token.value)]
 
-        operand_types = []
+        bytes += bin.correct_endianness(bin.makebytes(opcode, 2))
 
-        if (opcode.endswith("RI")):
-            operand_types.append("R")
-            operand_types.append("I")
+        for op in meta.opcode_types:
 
-        elif (opcode.endswith("RR")):
-            operand_types.append("R")
-            operand_types.append("R")
+            tok = tokens.pop(0)
 
-        elif (opcode.endswith("R")):
-            operand_types.append("R")
+            if op == "R":
+                if tok.type != "register":
+                    raise Exception("Expected register, got " + str(tok))
 
-        elif (opcode.endswith("I")):
-            operand_types.append("I")
+                regcode = registers.get_reg(tok.value)
 
-        operation_size = 32
+                bytes += bin.correct_endianness(bin.makebytes(regcode, 2))
 
-        if not("LOAD" in opcode and operand_types[1] == "I"):
-            if ("16" in opcode):
-                operation_size = 16
-            elif "8" in opcode:
-                operation_size = 8
+            elif op == "I":
+                if tok.type not in ["hex", "dec", "bin", "applied_label"]:
+                    raise Exception("Expected raw, got " + str(tok))
 
-        operands = []
+                if tok.type == "applied_label":
+                    self.indices_to_apply_labels[len(self.out_bytes) + len(bytes)] = tok.value
+                    bytes += bin.correct_endianness(bin.makebytes(0, int(meta.operation_size / 8)))
+                else:
+                    value = tok.numeric_value()
 
-        for op_type in operand_types:
+                    if value >= 2 ** meta.operation_size:
+                        raise Exception("Value too large")
+
+                    bytes += bin.correct_endianness(bin.makebytes(value, int(meta.operation_size / 8)))
+
+        return bytes
+                
+    def assemble_tokens(self, tokens: typing.List[lex_token.Token]) -> typing.List[int]:
+        if tokens[0].type == "label":
+            tok = tokens.pop(0)
+            self.labels[tok.value] = len(self.out_bytes)
             if len(tokens) == 0:
-                raise Exception("Missing operand for opcode: " + opcode)
-
-            operand = tokens.pop()
-
-            if (op_type == "R"):
-                if not registers.is_reg(operand):
-                    raise Exception("Expected register operand for opcode: " + opcode)
-                append_le(byte_arr, [0, int(registers.get_reg(operand))])
-                
-
-            if (op_type == "I"):
-                if operand.startswith("R"):
-                    raise Exception("Expected immediate operand for opcode: " + opcode)
-
-                imm = 0
-
-                if (operand.startswith(":")):
-                    if operation_size != 32:
-                        raise Exception("Cannot use label as operand for opcode: " + opcode)
-
-                    self.indices_to_apply_labels[len(self.out_bytes) + len(byte_arr)] = operand[1:]
-                    append_le(byte_arr, [0, 0, 0, 0])
-                else:
-                    if operand.startswith("X"):
-                        imm = (int(operand[2:], 16))
-                    elif operand.startswith("B"):
-                        imm = (int(operand[2:], 2))
-                    else:
-                        imm = (int(operand))
-
-                    if operation_size == 32:
-                        append_le(byte_arr, get_bytes(imm, 4))
-
-                    if operation_size == 16:
-                        append_le(byte_arr, get_bytes(imm, 2))
-
-                    if operation_size == 8:
-                        append_le(byte_arr, get_bytes(imm, 1))
-
-        return bytearray(byte_arr)
-                
-    def assemble_tokens(self, tokens):
-        if len(tokens) == 1 and tokens[0].endswith(":"):
-            self.labels[tokens[0][:-1]] = len(self.out_bytes)
-            return []
-        else:
+                return []
+            return self.assemble_tokens(tokens)
+        elif tokens[0].type == "instruction":
             return self.assemble_instruction(tokens)
+        else:
+            return self.assemble_literal(tokens)
 
-    def assemble_literal(self, line):
-        buffer = ""
-        buf_type = None
-        reading_buffer = False
+    def assemble_literal(self, tokens: typing.List[lex_token.Token]) -> typing.List[int]:
+        tok = tokens.pop(0)
 
-        bin = []
+        bytes: typing.List[int] = []
 
-        for c in line:
+        if tok.type != "raw":
+            raise Exception("Expected raw, got " + str(tok))
 
-            if c == "\"":
-                if not reading_buffer:
-                    reading_buffer = True
-                    buf_type = "string"
-                else:
-                    if buf_type != "string":
-                        raise Exception("Unexpected string literal")
+        while len(tokens) > 0:
+            tok = tokens.pop(0)
 
-                    reading_buffer = False
-                    buf_type = None
-                    bin += bytearray(buffer, "utf-8")
-                    buffer = ""
-                continue
+            if tok.type == "string":
+                bytes += tok.value.encode("utf-8")
+            elif tok.type in ["hex", "dec", "bin"]:
+                bytes += bin.correct_endianness(bin.makebytes(tok.numeric_value()))
+            else:
+                raise Exception("Expected literal, got " + str(tok))
 
-            elif c.upper() == "X":
-                if not reading_buffer:
-                    reading_buffer = True
-                    buf_type = "hex"
-                continue
-
-            elif c.upper() == "B":
-                if not reading_buffer:
-                    reading_buffer = True
-                    buf_type = "bin"
-                continue
-
-            elif c == " ":
-                if reading_buffer and buf_type != "string":
-                    reading_buffer = False
-                    buf_type = None
-                    if buf_type == "hex":
-                        bin += get_bytes(int(buffer, 16), len(buffer) / 2)
-                    elif buf_type == "bin":
-                        bin += get_bytes(int(buffer, 2), len(buffer) / 8)
-                    continue
-                elif not reading_buffer:
-                    continue
-
-            if reading_buffer:
-                buffer += c
-
-        if reading_buffer:
-            if buf_type == "hex":
-                bin += get_bytes(int(buffer, 16), len(buffer) / 2)
-            elif buf_type == "bin":
-                bin += get_bytes(int(buffer, 2), len(buffer) / 8)
-            elif buf_type == "string":
-                bin += bytearray(buffer, "utf-8")
-
-        return bin
+        return bytes
 
 
     def apply_labels(self):
@@ -195,42 +102,27 @@ class Assembler:
             if label_index is None:
                 raise Exception("Unknown label: " + label)
 
-            bin = [
-                (label_index >> 24) & 0xFF,
-                (label_index >> 16) & 0xFF,
-                (label_index >> 8) & 0xFF,
-                label_index & 0xFF
-            ]
+            bytes = bin.correct_endianness(bin.makebytes(label_index, 4))
+        
 
-            bin = le(bin)
-
-            self.out_bytes[index] = bin[0]
-            self.out_bytes[index + 1] = bin[1]
-            self.out_bytes[index + 2] = bin[2]
-            self.out_bytes[index + 3] = bin[3]
+            self.out_bytes[index] = bytes[0]
+            self.out_bytes[index + 1] = bytes[1]
+            self.out_bytes[index + 2] = bytes[2]
+            self.out_bytes[index + 3] = bytes[3]
 
     # Assemble a single line
-    def assemble_line(self, line):
-        line = line.strip()
+    def assemble_line(self, line: str) -> None:
+        tokens = self.lexer.tokenize_line(line)
 
-        bin = []
+        if len(tokens) == 0:
+            return
         
-        if line.startswith("$"): #raw ascii
-            line = line[1:]
-            bin = self.assemble_literal(line)
-        else:
-            if ";" in line:
-                line = line.split(";")[0].strip()
-            
-            if line == "":
-                return
+        bytes = self.assemble_tokens(tokens)
+        if len(tokens) > 0:
+            raise Exception("Unexpected token: " + str(tokens[0]))
 
-            tokens = list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), line.split(" "))))
-            bin = self.assemble_tokens(tokens)
-
-        if (len(bin) > 0):
-            for b in bin:
-                self.out_bytes.append(b)
+        if len(bytes) > 0:
+            self.out_bytes += bytes
 
 
     def assemble(self):
@@ -238,6 +130,8 @@ class Assembler:
             self.assemble_line(line)
 
         self.apply_labels()
+
+        bin.validate_bytes(self.out_bytes)
 
         self.out_file.write(bytearray(self.out_bytes))
 

@@ -78,10 +78,10 @@ special_names = {
     "FLAGS": R29
 }
 
-def is_reg(reg):
+def is_reg(reg: str) -> bool:
     return reg in registers or reg in special_names
 
-def get_reg(reg):
+def get_reg(reg: str) -> int:
     if reg in registers:
         return registers.index(reg)
     elif reg in special_names:
