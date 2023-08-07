@@ -1,5 +1,6 @@
 debug.txt
 .vscode
+.mypy_cache
 main
 sample
 assembler/__pycache__

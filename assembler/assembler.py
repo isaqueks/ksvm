@@ -6,6 +6,7 @@ import typing
 import asm_lexer
 import lex_token
 import instruction_meta as imeta
+from assemble_exception import AssembleException
 
 class Assembler:
 
@@ -14,15 +15,18 @@ class Assembler:
     indices_to_apply_labels: typing.Dict[int, str] = {}
     lexer: asm_lexer.Lexer = asm_lexer.Lexer()
 
-    def __init__(self, out_file: io.BufferedIOBase, input_file: io.TextIOWrapper):
+    curr_line_num = 1
+    curr_file_name = ""
+
+    def __init__(self, out_file: io.BufferedIOBase, source_file: str):
         self.out_file = out_file
-        self.input_file = input_file
+        self.curr_file_name = source_file
 
     def assemble_instruction(self, tokens: typing.List[lex_token.Token]) -> typing.List[int]:
         instruction_token = tokens.pop(0)
 
         if instruction_token.type != "instruction":
-            raise Exception("Expected instruction, got " + str(tokens[0]))
+            raise AssembleException(self.curr_file_name, self.curr_line_num, "Expected instruction, got " + str(tokens[0]))
 
 
         bytes: typing.List[int] = []
@@ -39,7 +43,7 @@ class Assembler:
 
             if op == "R":
                 if tok.type != "register":
-                    raise Exception("Expected register, got " + str(tok))
+                    raise AssembleException(self.curr_file_name, self.curr_line_num, "Expected register, got " + str(tok))
 
                 regcode = registers.get_reg(tok.value)
 
@@ -47,7 +51,7 @@ class Assembler:
 
             elif op == "I":
                 if tok.type not in ["hex", "dec", "bin", "applied_label"]:
-                    raise Exception("Expected raw, got " + str(tok))
+                    raise AssembleException(self.curr_file_name, self.curr_line_num, "Expected raw, got " + str(tok))
 
                 if tok.type == "applied_label":
                     self.indices_to_apply_labels[len(self.out_bytes) + len(bytes)] = tok.value
@@ -56,7 +60,7 @@ class Assembler:
                     value = tok.numeric_value()
 
                     if value >= 2 ** meta.operation_size:
-                        raise Exception("Value too large")
+                        raise AssembleException(self.curr_file_name, self.curr_line_num, "Value too large")
 
                     bytes += bin.correct_endianness(bin.makebytes(value, int(meta.operation_size / 8)))
 
@@ -80,7 +84,7 @@ class Assembler:
         bytes: typing.List[int] = []
 
         if tok.type != "raw":
-            raise Exception("Expected raw, got " + str(tok))
+            raise AssembleException(self.curr_file_name, self.curr_line_num, "Expected raw, got " + str(tok))
 
         while len(tokens) > 0:
             tok = tokens.pop(0)
@@ -90,7 +94,7 @@ class Assembler:
             elif tok.type in ["hex", "dec", "bin"]:
                 bytes += bin.correct_endianness(bin.makebytes(tok.numeric_value()))
             else:
-                raise Exception("Expected literal, got " + str(tok))
+                raise AssembleException(self.curr_file_name, self.curr_line_num, "Expected literal, got " + str(tok))
 
         return bytes
 
@@ -119,15 +123,25 @@ class Assembler:
         
         bytes = self.assemble_tokens(tokens)
         if len(tokens) > 0:
-            raise Exception("Unexpected token: " + str(tokens[0]))
+            raise AssembleException(self.curr_file_name, self.curr_line_num, "Unexpected token: " + str(tokens[0]))
 
         if len(bytes) > 0:
             self.out_bytes += bytes
 
 
-    def assemble(self):
-        for line in self.input_file:
+    def assemble_file(self, file_name: str) -> None:
+
+        file = io.open(file_name, "r")
+
+        for line in file:
             self.assemble_line(line)
+            self.curr_line_num += 1
+
+        file.close()
+
+    def assemble(self):
+
+        self.assemble_file(self.curr_file_name)
 
         self.apply_labels()
 

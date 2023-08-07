@@ -3,6 +3,8 @@
 
 import sys
 import assembler
+import io
+from assemble_exception import AssembleException
 
 source = sys.argv[1]
 if source is None:
@@ -14,10 +16,18 @@ if out_path is None:
     print("No output file specified")
     sys.exit(1)
 
-# Read source file
-with open(source, "r") as f:
     # Iterate over lines
-    out = open(out_path, "wb")
+out = io.open(out_path, "wb")
 
-    asm = assembler.Assembler(out, f)
+try:
+    asm = assembler.Assembler(out, source)
     asm.assemble()
+
+except AssembleException as e:
+    print("Error: " + str(e))
+
+except Exception as e:
+    print("Unknown error: " + str(e))
+
+finally:
+    out.close()
