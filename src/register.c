@@ -30,8 +30,7 @@ uint8_t regGet8(Register_t *reg) {
     return reg8[0];
 }
 
-
-char* register_names[] = {
+const char* register_names[] = {
     "EAX",
     "EBX",
     "ECX",

@@ -56,6 +56,18 @@ const InstructionDef JZ32I = { OP_JZ32I, 32, 4, 0 };
 const InstructionDef JNZ32R = { OP_JNZ32R, 32, 2, 0 };
 const InstructionDef JNZ32I = { OP_JNZ32I, 32, 4, 0 };
 
+const InstructionDef JG32R = { OP_JG32R, 32, 2, 0 };
+const InstructionDef JG32I = { OP_JG32I, 32, 4, 0 };
+
+const InstructionDef JGE32R = { OP_JGE32R, 32, 2, 0 };
+const InstructionDef JGE32I = { OP_JGE32I, 32, 4, 0 };
+
+const InstructionDef JL32R = { OP_JL32R, 32, 2, 0 };
+const InstructionDef JL32I = { OP_JL32I, 32, 4, 0 };
+
+const InstructionDef JLE32R = { OP_JLE32R, 32, 2, 0 };
+const InstructionDef JLE32I = { OP_JLE32I, 32, 4, 0 };
+
 const InstructionDef LOAD32RR = { OP_LOAD32RR, 32, 2, 2 };
 const InstructionDef LOAD32RI = { OP_LOAD32RI, 32, 2, 4 };
 const InstructionDef LOAD16RR = { OP_LOAD16RR, 16, 2, 2 };
@@ -182,6 +194,26 @@ InstructionDef* instruction_get_def(InstructionOpcode opcode) {
             return &JNZ32R;
         case OP_JNZ32I:
             return &JNZ32I;
+
+        case OP_JG32R:
+            return &JG32R;
+        case OP_JG32I:
+            return &JG32I;
+
+        case OP_JGE32R:
+            return &JGE32R;
+        case OP_JGE32I:
+            return &JGE32I;
+
+        case OP_JL32R:
+            return &JL32R;
+        case OP_JL32I:
+            return &JL32I;
+
+        case OP_JLE32R:
+            return &JLE32R;
+        case OP_JLE32I:
+            return &JLE32I;
 
         case OP_LOAD32RR:
             return &LOAD32RR;

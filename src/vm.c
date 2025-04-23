@@ -625,7 +625,7 @@ void vm_dump_program(VM* vm, char* program, int start, int size, int highlight_p
     }
 }
 
-void vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step) {
+int vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step) {
     while (!FLAG(FLAG_ERROR) && regGet32(&vm->cpu.registers[R_PROGRAM_COUNTER]) < vm->memory_size) {
 
         uint32_t pc = regGet32(&vm->cpu.registers[R_PROGRAM_COUNTER]);
@@ -640,6 +640,10 @@ void vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step) {
             on_step(vm, pc);
         }
         vm_compute_instruction(vm, *CAST(uint16_t*, opcode), &vm->memory[pc + 2]);
-
     }
+    if (FLAG(FLAG_ERROR)) {
+        return 1;
+    }
+
+    return 0;
 }

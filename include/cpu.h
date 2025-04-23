@@ -78,12 +78,35 @@ void cpu_jnz_i(Cpu* cpu, int size, uint8_t* imm_value);
 
 void cpu_jnz_r(Cpu* cpu, int size, int reg);
 
+// JG
+
+void cpu_jg_i(Cpu* cpu, int size, uint8_t* imm_value);
+
+void cpu_jg_r(Cpu* cpu, int size, int reg);
+
+// JGE
+
+void cpu_jge_i(Cpu* cpu, int size, uint8_t* imm_value);
+
+void cpu_jge_r(Cpu* cpu, int size, int reg);
+
+// JL
+
+void cpu_jl_i(Cpu* cpu, int size, uint8_t* imm_value);
+
+void cpu_jl_r(Cpu* cpu, int size, int reg);
+
+// JLE
+
+void cpu_jle_i(Cpu* cpu, int size, uint8_t* imm_value);
+
+void cpu_jle_r(Cpu* cpu, int size, int reg);
+
 // LOAD
 
 void cpu_load_ri(Cpu* cpu, int size, int reg, uint8_t* imm_value, uint8_t* memory);
 
 void cpu_load_rr(Cpu* cpu, int size, int reg1, int reg2, uint8_t* memory);
-
 
 // STORE
 

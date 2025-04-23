@@ -30,6 +30,10 @@ typedef struct {
 #define SYSCALL_BASE 140
 #define CALL_BASE 150
 #define RET_BASE 160
+#define JG_BASE 170
+#define JGE_BASE 180
+#define JL_BASE 190
+#define JLE_BASE 200
 
 typedef enum { 
 
@@ -83,6 +87,18 @@ typedef enum {
 
     OP_JNZ32R = JNZ_BASE,
     OP_JNZ32I = JNZ_BASE + 2,
+
+    OP_JG32R = JG_BASE,
+    OP_JG32I = JG_BASE + 2,
+
+    OP_JGE32R = JGE_BASE,
+    OP_JGE32I = JGE_BASE + 2,
+
+    OP_JL32R = JL_BASE,
+    OP_JL32I = JL_BASE + 2,
+
+    OP_JLE32R = JLE_BASE,
+    OP_JLE32I = JLE_BASE + 2,
 
     OP_LOAD32RR = LOAD_BASE,
     OP_LOAD32RI = LOAD_BASE + 1,

@@ -28,6 +28,6 @@ void vm_dump_program(VM* vm, char* program, int start, int size, int highlight_p
 
 void vm_print_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands, FILE* out);
 
-void vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step);
+int vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step);
 
 #endif
