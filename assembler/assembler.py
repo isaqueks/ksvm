@@ -106,7 +106,11 @@ class Assembler:
             if label_index is None:
                 raise Exception("Unknown label: " + label)
 
-            bytes = bin.correct_endianness(bin.makebytes(label_index, 4))
+            bytes = (bin.makebytes(label_index, 0))
+            while len(bytes) < 4:
+                bytes.append(0)
+
+            print(label_index, label, bytes)
         
 
             self.out_bytes[index] = bytes[0]

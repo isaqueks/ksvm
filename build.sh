@@ -1,1 +1,1 @@
-gcc -g -DDEBUG_COLORS main.c src/*.c -o main
+gcc -g -DDEBUG_COLORS main.c src/*.c -o main -lm

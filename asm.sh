@@ -1,0 +1,1 @@
+python3 assembler/asm.py examples/$1.ksasm $1.out

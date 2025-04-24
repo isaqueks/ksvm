@@ -11,8 +11,8 @@ STRLEN:                 ; strlen(eax) -> stack
 
     STRLEN_LOOP:
         LOAD8RR EBX EAX
-        CMP8RI EBX 0
         ADD32RI EAX 1
+        CMP8RI EBX 0
         JNZ32I :STRLEN_LOOP
 
     STRLEN_DONE:

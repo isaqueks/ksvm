@@ -5,10 +5,12 @@ ENDIANNESS = "little"
 def makebytes(num: int, size: int = 0) -> typing.List[int]:
     
     bytes = []
+    first = True
 
-    while num > 0:
+    while num > 0 or first:
         bytes.append(num & 0xFF)
         num = num >> 8
+        first = False
 
     while size > 0 and len(bytes) < size:
         bytes.insert(0, 0)

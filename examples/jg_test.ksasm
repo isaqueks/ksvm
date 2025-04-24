@@ -1,0 +1,118 @@
+START:
+    MOV32RI EAX :M_18_20
+    PUSH32R EAX
+    CALL32I :PRINT
+
+    MOV32RI EAX 20
+    CMP32RI EAX 18
+
+    JG32I :PRINT_GREATER
+    JGE32I :PRINT_GREATER_EQUAL
+    JL32I :PRINT_LESS
+    JLE32I :PRINT_LESS_EQUAL
+
+    MOV32RI EAX :M_22_20
+    PUSH32R EAX
+    CALL32I :PRINT
+
+    MOV32RI EAX 22
+    CMP32RI EAX 20
+
+    JG32I :PRINT_GREATER
+    JGE32I :PRINT_GREATER_EQUAL
+    JL32I :PRINT_LESS
+    JLE32I :PRINT_LESS_EQUAL
+
+    MOV32RI EAX :M_20_20
+    PUSH32R EAX
+    CALL32I :PRINT
+
+    MOV32RI EAX 20
+    CMP32RI EAX 20
+
+    JG32I :PRINT_GREATER
+    JGE32I :PRINT_GREATER_EQUAL
+    JL32I :PRINT_LESS
+    JLE32I :PRINT_LESS_EQUAL
+
+    
+    $ xFF xFF
+
+    PRINT_GREATER:
+        MOV32RI EAX :M_GREATER
+        PUSH32R EAX
+        CALL32I :PRINT
+        RET
+
+    PRINT_GREATER_EQUAL:
+        MOV32RI EAX :M_GREATER_EQUAL
+        PUSH32R EAX
+        CALL32I :PRINT
+        RET
+
+    PRINT_LESS:
+        MOV32RI EAX :M_LESS
+        PUSH32R EAX
+        CALL32I :PRINT
+        RET
+
+    PRINT_LESS_EQUAL:
+        MOV32RI EAX :M_LESS_EQUAL
+        PUSH32R EAX
+        CALL32I :PRINT
+        RET
+
+STRLEN:                 ; strlen(eax) -> stack
+    POP32R ECX
+    MOV32RR EDX EAX
+
+    STRLEN_LOOP:
+        LOAD8RR EBX EAX
+        ADD32RI EAX 1
+        CMP8RI EBX 0
+        JNZ32I :STRLEN_LOOP
+
+    STRLEN_DONE:
+        SUB32RR EAX EDX
+        ADD32RI EAX x01
+        PUSH32R EAX
+        PUSH32R ECX
+        RET
+
+PRINT:                  ; (char* buffer)
+    POP32R R11          ; Old EIP   
+    POP32R R10          ; Load buffer param to R10
+    PUSH32R R10     ; Set EAX to buffer
+    CALL32I :STRLEN
+    POP32R EDX          ; Load strlen result to EDX
+    MOV32RI EAX x01     ; Set EAX to 1 (write syscall)
+    MOV32RI EBX x01     ; Set EBX to 1 (stdout)
+    MOV32RR ECX R10     ; Set ECX to buffer
+    SYSCALL             ; Call write syscall
+
+    ; "Return"
+    PUSH32R R11         ; Save EIP
+    RET
+
+
+M_GREATER:
+$ "Greater" x0A x00
+M_GREATER_EQUAL:
+$ "Greater or equal " x0A x00
+M_LESS:
+$ "Less" x0A x00
+M_LESS_EQUAL:
+$ "Less or equal" x0A x00
+
+M_18_20:
+$ "18 to 20 " x0A x00
+
+M_20_20:
+$ "20 to 20 " x0A x00
+
+M_22_20:
+$ "22 to 20 " x0A x00
+
+
+BUFFER:
+$ x0000

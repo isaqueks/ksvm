@@ -248,6 +248,34 @@ void vm_print_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands, F
             vm_print_instruction_i(out, "JNZ32", &operands[0], 32);
             break;
 
+        case OP_JG32R:
+            vm_print_instruction_r(out, "JG32", *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JG32I:
+            vm_print_instruction_i(out, "JG32", &operands[0], 32);
+            break;
+
+        case OP_JL32R:
+            vm_print_instruction_r(out, "JL32", *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JL32I:
+            vm_print_instruction_i(out, "JL32", &operands[0], 32);
+            break;
+
+        case OP_JGE32R:
+            vm_print_instruction_r(out, "JGE32", *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JGE32I:
+            vm_print_instruction_i(out, "JGE32", &operands[0], 32);
+            break;
+
+        case OP_JLE32R:
+            vm_print_instruction_r(out, "JLE32", *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JLE32I:
+            vm_print_instruction_i(out, "JLE32", &operands[0], 32);
+            break;    
+
         case OP_LOAD8RI:
             vm_print_instruction_ri(out, "LOAD8", *CAST(uint16_t*, &operands[0]), &operands[2], 8);
             break;
@@ -447,7 +475,35 @@ void vm_compute_instruction(VM* vm, InstructionOpcode opcode, uint8_t* operands)
         case OP_JNZ32I:
             cpu_jnz_i(&vm->cpu, 32, &operands[0]);
             break;
-    
+
+        case OP_JG32R:
+            cpu_jg_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JG32I:
+            cpu_jg_i(&vm->cpu, 32, &operands[0]);
+            break;
+
+        case OP_JL32R:
+            cpu_jl_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JL32I:
+            cpu_jl_i(&vm->cpu, 32, &operands[0]);
+            break;
+        
+        case OP_JGE32R:
+            cpu_jge_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JGE32I:
+            cpu_jge_i(&vm->cpu, 32, &operands[0]);
+            break;
+
+        case OP_JLE32R:
+            cpu_jle_r(&vm->cpu, 32, *CAST(uint16_t*, &operands[0]));
+            break;
+        case OP_JLE32I:
+            cpu_jle_i(&vm->cpu, 32, &operands[0]);
+            break;
+
         case OP_LOAD8RR:
             cpu_load_rr(&vm->cpu, 8, *CAST(uint16_t*, &operands[0]), *CAST(uint16_t*, &operands[2]), vm->memory);
             break;
@@ -644,6 +700,8 @@ int vm_run(VM* vm, FILE* backlog, vm_step_callback_t on_step) {
     if (FLAG(FLAG_ERROR)) {
         return 1;
     }
+
+    printf("PC = %d, MEMORY = %d\n", regGet32(&vm->cpu.registers[R_PROGRAM_COUNTER]), vm->memory_size);
 
     return 0;
 }

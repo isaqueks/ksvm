@@ -50,16 +50,16 @@ int main(int argc, char** argv) {
     if (pid == 0) {
         void* prog = NULL;
         int psize = 0;
-        void* memory = malloc(1024);
+        void* memory = calloc(2048, 1);
 
         VM vm;
-        vm_init(&vm, memory, 1024);
+        vm_init(&vm, memory, 2048);
 
         if (argc >= 2) {
             FILE* file = fopen(argv[1], "rb");
-            char* buff = malloc(1024);
+            char* buff = malloc(2048);
             prog = buff;
-            psize = fread(buff, 1, 1024, file);
+            psize = fread(buff, 1, 2048, file);
             fclose(file);
 
             // fprintf(debug, "Loaded %d bytes from %s\n", psize, argv[1]);
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
         }
     }
     else {
-        wait(NULL);
+        waitpid(pid, &status, 0);
     }
 
     fclose(debug);

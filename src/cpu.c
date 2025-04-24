@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "../include/register.h"
 
@@ -23,6 +24,15 @@ void cpu_set_zero_flag(Cpu* cpu, bool bit) {
 
 bool cpu_get_zero_flag(Cpu* cpu) {
     return (cpu->registers[R_FLAGS] & FLAG_ZERO) == FLAG_ZERO;
+}
+
+void cpu_set_carry_flag(Cpu* cpu, bool bit) {
+    cpu->registers[R_FLAGS] = bit ? cpu->registers[R_FLAGS] | FLAG_CARRY
+                                  : cpu->registers[R_FLAGS] & ~FLAG_CARRY;
+}
+
+bool cpu_get_carry_flag(Cpu* cpu) {
+    return (cpu->registers[R_FLAGS] & FLAG_CARRY) == FLAG_CARRY;
 }
 
 void cpu_print_registers(Cpu* cpu, FILE* out) {
@@ -93,80 +103,115 @@ void cpu_mov_rr(Cpu* cpu, int size, int reg1, int reg2) {
 // ADD
 
 void cpu_add_ri(Cpu* cpu, int size, int reg, uint8_t* imm_value) {
+    uint64_t sum = 0;
     switch (size) {
         case 8:
-            regSet8(&cpu->registers[reg],
-                    regGet8(&cpu->registers[reg]) + *(uint8_t*)(imm_value));
+            sum = regGet8(&cpu->registers[reg]) + *(uint8_t*)(imm_value);
+            regSet8(&cpu->registers[reg], (uint8_t)sum);
             break;
         case 16:
-            regSet16(&cpu->registers[reg],
-                     regGet16(&cpu->registers[reg]) + *(uint16_t*)(imm_value));
+            sum = regGet16(&cpu->registers[reg]) + *(uint16_t*)(imm_value);
+            regSet16(&cpu->registers[reg], (uint16_t)sum);
             break;
         case 32:
-            regSet32(&cpu->registers[reg],
-                     regGet32(&cpu->registers[reg]) + *(uint32_t*)(imm_value));
+            sum = regGet32(&cpu->registers[reg]) + *(uint32_t*)(imm_value);
+            regSet32(&cpu->registers[reg], (uint32_t)sum);
             break;
     }
+
+    uint64_t max = (uint64_t)pow(2, size) - 1;
+    cpu_set_carry_flag(cpu, sum > max);
+    cpu_set_zero_flag(cpu, sum == 0);
 }
 
 void cpu_add_rr(Cpu* cpu, int size, int reg1, int reg2) {
+    uint64_t sum = 0;
     switch (size) {
         case 8:
-            regSet8(&cpu->registers[reg1], regGet8(&cpu->registers[reg1]) +
-                                               regGet8(&cpu->registers[reg2]));
+            sum = regGet8(&cpu->registers[reg1]) + regGet8(&cpu->registers[reg2]);
+            regSet8(&cpu->registers[reg1], (uint8_t)sum);
             break;
         case 16:
-            regSet16(&cpu->registers[reg1],
-                     regGet16(&cpu->registers[reg1]) +
-                         regGet16(&cpu->registers[reg2]));
+            sum = regGet16(&cpu->registers[reg1]) + regGet16(&cpu->registers[reg2]);
+            regSet16(&cpu->registers[reg1], (uint16_t)sum);
             break;
         case 32:
-            regSet32(&cpu->registers[reg1],
-                     regGet32(&cpu->registers[reg1]) +
-                         regGet32(&cpu->registers[reg2]));
+            sum = regGet32(&cpu->registers[reg1]) + regGet32(&cpu->registers[reg2]);
+            regSet32(&cpu->registers[reg1], (uint32_t)sum);
             break;
     }
+
+    uint64_t max = (uint64_t)pow(2, size) - 1;
+    cpu_set_carry_flag(cpu, sum > max);
+    cpu_set_zero_flag(cpu, sum == 0);
 }
 
 // SUB
 
 void cpu_sub_ri(Cpu* cpu, int size, int reg, uint8_t* imm_value) {
+    uint32_t a = 0;
+    uint32_t b = 0;
+    uint32_t sub = 0;
+
     switch (size) {
         case 8:
-            regSet8(&cpu->registers[reg],
-                    regGet8(&cpu->registers[reg]) - *(uint8_t*)(imm_value));
+            a = regGet8(&cpu->registers[reg]);
+            b = *(uint8_t*)(imm_value);
+            sub = a - b;
+            regSet8(&cpu->registers[reg], (uint8_t)sub);
             break;
         case 16:
-            regSet16(&cpu->registers[reg],
-                     regGet16(&cpu->registers[reg]) - *(uint16_t*)(imm_value));
+            a = regGet16(&cpu->registers[reg]);
+            b = *(uint16_t*)(imm_value);
+            sub = a - b;
+            regSet16(&cpu->registers[reg], sub);
             break;
         case 32:
-            regSet32(&cpu->registers[reg],
-                     regGet32(&cpu->registers[reg]) - *(uint32_t*)(imm_value));
+            a = regGet32(&cpu->registers[reg]);
+            b = *(uint32_t*)(imm_value);
+            sub = a - b;
+            regSet32(&cpu->registers[reg], sub);
             break;
     }
+
+    cpu_set_carry_flag(cpu, sub > a);    
+    cpu_set_zero_flag(cpu, sub == 0);
 }
 
 void cpu_sub_rr(Cpu* cpu, int size, int reg1, int reg2) {
+    uint32_t a = 0;
+    uint32_t b = 0;
+    uint32_t sub = 0;
+
     switch (size) {
         case 8:
-            regSet8(&cpu->registers[reg1], regGet8(&cpu->registers[reg1]) -
-                                               regGet8(&cpu->registers[reg2]));
+            a = regGet8(&cpu->registers[reg1]);
+            b = regGet8(&cpu->registers[reg2]);
+            sub = a - b;
+
+            regSet8(&cpu->registers[reg1], sub);
             break;
         case 16:
-            regSet16(&cpu->registers[reg1],
-                     regGet16(&cpu->registers[reg1]) -
-                         regGet16(&cpu->registers[reg2]));
+            a = regGet16(&cpu->registers[reg1]);
+            b = regGet16(&cpu->registers[reg2]);
+            sub = a - b;
+
+            regSet16(&cpu->registers[reg1], sub);
             break;
         case 32:
-            regSet32(&cpu->registers[reg1],
-                     regGet32(&cpu->registers[reg1]) -
-                         regGet32(&cpu->registers[reg2]));
+            a = regGet32(&cpu->registers[reg1]);
+            b = regGet32(&cpu->registers[reg2]);
+            sub = a - b;
+
+            regSet32(&cpu->registers[reg1], sub);
             break;
     }
+
+    cpu_set_carry_flag(cpu, sub > a);
+    cpu_set_zero_flag(cpu, sub == 0);
 }
 
-// MUK
+// MUL
 
 void cpu_mul_ri(Cpu* cpu, int size, int reg, uint8_t* imm_value) {
     switch (size) {
@@ -245,42 +290,63 @@ void cpu_div_rr(Cpu* cpu, int size, int reg1, int reg2) {
 // CMP
 
 void cpu_cmp_ri(Cpu* cpu, int size, int reg, uint8_t* imm_value) {
-    int acc = 0;
+    uint32_t a = 0;
+    uint32_t b = 0;
+    uint32_t sub = 0;
 
     switch (size) {
         case 8:
-            acc = regGet8(&cpu->registers[reg]) - *(uint8_t*)(imm_value);
+            a = regGet8(&cpu->registers[reg]);
+            b = *(uint8_t*)(imm_value);
+            sub = a - b;
+
             break;
         case 16:
-            acc = regGet16(&cpu->registers[reg]) - *(uint16_t*)(imm_value);
+            a = regGet16(&cpu->registers[reg]);
+            b = *(uint16_t*)(imm_value);
+            sub = a - b;
+
             break;
         case 32:
-            acc = regGet32(&cpu->registers[reg]) - *(uint32_t*)(imm_value);
+            a = regGet32(&cpu->registers[reg]);
+            b = *(uint32_t*)(imm_value);
+            sub = a - b;
+
             break;
     }
 
-    cpu_set_zero_flag(cpu, acc == 0);
+    cpu_set_carry_flag(cpu, sub > a);    
+    cpu_set_zero_flag(cpu, sub == 0);
 }
 
 void cpu_cmp_rr(Cpu* cpu, int size, int reg1, int reg2) {
-    int acc = 0;
+    uint32_t a = 0;
+    uint32_t b = 0;
+    uint32_t sub = 0;
 
     switch (size) {
         case 8:
-            acc =
-                regGet8(&cpu->registers[reg1]) - regGet8(&cpu->registers[reg2]);
+            a = regGet8(&cpu->registers[reg1]);
+            b = regGet8(&cpu->registers[reg2]);
+            sub = a - b;
+
             break;
         case 16:
-            acc = regGet16(&cpu->registers[reg1]) -
-                  regGet16(&cpu->registers[reg2]);
+            a = regGet16(&cpu->registers[reg1]);
+            b = regGet16(&cpu->registers[reg2]);
+            sub = a - b;
+
             break;
         case 32:
-            acc = regGet32(&cpu->registers[reg1]) -
-                  regGet32(&cpu->registers[reg2]);
+            a = regGet32(&cpu->registers[reg1]);
+            b = regGet32(&cpu->registers[reg2]);
+            sub = a - b;
+
             break;
     }
 
-    cpu_set_zero_flag(cpu, acc == 0);
+    cpu_set_carry_flag(cpu, sub > a);
+    cpu_set_zero_flag(cpu, sub == 0);
 }
 
 // JMP
@@ -338,27 +404,79 @@ void cpu_jnz_r(Cpu* cpu, int size, int reg) {
 
 // JG
 
-void cpu_jg_i(Cpu* cpu, int size, uint8_t* imm_value);
+void cpu_jg_i(Cpu* cpu, int size, uint8_t* imm_value) {
+    assert(size == 32);
 
-void cpu_jg_r(Cpu* cpu, int size, int reg);
+    if (!cpu_get_zero_flag(cpu) && !cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] = *(uint32_t*)(imm_value);
+    }
+}
+
+void cpu_jg_r(Cpu* cpu, int size, int reg) {
+    assert(size == 32);
+
+    if (!cpu_get_zero_flag(cpu) && !cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] =
+            regGet32(&cpu->registers[reg]);
+    }
+}
 
 // JGE
 
-void cpu_jge_i(Cpu* cpu, int size, uint8_t* imm_value);
+void cpu_jge_i(Cpu* cpu, int size, uint8_t* imm_value) {
+    assert(size == 32);
 
-void cpu_jge_r(Cpu* cpu, int size, int reg);
+    if (!cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] = *(uint32_t*)(imm_value);
+    }
+}
+
+void cpu_jge_r(Cpu* cpu, int size, int reg) {
+    assert(size == 32);
+
+    if (!cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] =
+            regGet32(&cpu->registers[reg]);
+    }
+}
 
 // JL
 
-void cpu_jl_i(Cpu* cpu, int size, uint8_t* imm_value);
+void cpu_jl_i(Cpu* cpu, int size, uint8_t* imm_value) {
+    assert(size == 32);
 
-void cpu_jl_r(Cpu* cpu, int size, int reg);
+    if (cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] = *(uint32_t*)(imm_value);
+    }
+}
+
+void cpu_jl_r(Cpu* cpu, int size, int reg) {
+    assert(size == 32);
+
+    if (cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] =
+            regGet32(&cpu->registers[reg]);
+    }
+}
 
 // JLE
 
-void cpu_jle_i(Cpu* cpu, int size, uint8_t* imm_value);
+void cpu_jle_i(Cpu* cpu, int size, uint8_t* imm_value) {
+    assert(size == 32);
 
-void cpu_jle_r(Cpu* cpu, int size, int reg);
+    if (cpu_get_zero_flag(cpu) || cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] = *(uint32_t*)(imm_value);
+    }
+}
+
+void cpu_jle_r(Cpu* cpu, int size, int reg) {
+    assert(size == 32);
+
+    if (cpu_get_zero_flag(cpu) || cpu_get_carry_flag(cpu)) {
+        cpu->registers[R_PROGRAM_COUNTER] =
+            regGet32(&cpu->registers[reg]);
+    }
+}
 
 // LOAD
 

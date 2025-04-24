@@ -6,3 +6,4 @@ sample
 assembler/__pycache__
 *.bin
 *.txt
+*.out
